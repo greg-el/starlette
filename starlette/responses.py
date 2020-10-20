@@ -103,7 +103,7 @@ class Response:
         key: str,
         value: str = "",
         max_age: int = None,
-        expires: int = None,
+        expires: typing.Union[int, float] = None,
         path: str = "/",
         domain: str = None,
         secure: bool = False,
@@ -115,7 +115,7 @@ class Response:
         if max_age is not None:
             cookie[key]["max-age"] = max_age
         if expires is not None:
-            cookie[key]["expires"] = expires
+            cookie[key]["expires"] = int(expires)
         if path is not None:
             cookie[key]["path"] = path
         if domain is not None:

@@ -276,6 +276,82 @@ def test_set_cookie():
     assert response.text == "Hello, world!"
 
 
+def test_set_cookie_int():
+    import datetime as dt
+    conf = {
+        "key": "mycookie",
+        "value": "myvalue",
+        "max_age": 10,
+        "expires": 10,
+        "path": "/",
+        "domain": "localhost",
+        "secure": True,
+        "httponly": True,
+        "samesite": "none",
+    }
+
+    async def app(scope, receive, send):
+        response = Response("Hello, world!", media_type="text/plain")
+        response.set_cookie(
+            key=conf["key"],
+            value=conf["value"],
+            max_age=conf["max_age"],
+            expires=conf["expires"],
+            path=conf["path"],
+            domain=conf["domain"],
+            secure=conf["secure"],
+            httponly=conf["httponly"],
+            samesite=conf["samesite"],
+        )
+
+        await response(scope, receive, send)
+
+    client = TestClient(app)
+    response = client.get("/")
+    now = dt.datetime.now() + dt.timedelta(seconds=conf["expires"])
+    check_time = dt.datetime.strftime(now, "%a, %d %b %Y %H:%M:%S GMT")
+    check_cookie = f'{conf["key"]}={conf["value"]}; Domain={conf["domain"]}; expires={check_time}; HttpOnly; Max-Age={conf["max_age"]}; Path={conf["path"]}; SameSite={conf["samesite"]}; Secure'
+    assert response.headers["set-cookie"] == check_cookie
+
+
+def test_set_cookie_float():
+    import datetime as dt
+    conf = {
+        "key": "mycookie",
+        "value": "myvalue",
+        "max_age": 10,
+        "expires": 10.123,
+        "path": "/",
+        "domain": "localhost",
+        "secure": True,
+        "httponly": True,
+        "samesite": "none",
+    }
+
+    async def app(scope, receive, send):
+        response = Response("Hello, world!", media_type="text/plain")
+        response.set_cookie(
+            key=conf["key"],
+            value=conf["value"],
+            max_age=conf["max_age"],
+            expires=conf["expires"],
+            path=conf["path"],
+            domain=conf["domain"],
+            secure=conf["secure"],
+            httponly=conf["httponly"],
+            samesite=conf["samesite"],
+        )
+
+        await response(scope, receive, send)
+
+    client = TestClient(app)
+    response = client.get("/")
+    now = dt.datetime.now() + dt.timedelta(seconds=int(conf["expires"]))
+    check_time = dt.datetime.strftime(now, "%a, %d %b %Y %H:%M:%S GMT")
+    check_cookie = f'{conf["key"]}={conf["value"]}; Domain={conf["domain"]}; expires={check_time}; HttpOnly; Max-Age={conf["max_age"]}; Path={conf["path"]}; SameSite={conf["samesite"]}; Secure'
+    assert response.headers["set-cookie"] == check_cookie
+
+
 def test_delete_cookie():
     async def app(scope, receive, send):
         request = Request(scope, receive)
